@@ -68,7 +68,7 @@ def copyDir(dirFrom,dirTo):
     #print(cmd)
     os.system(cmd)
 
-def copyVCToBin(vsVersion):
+def copyVC(vsVersion):
     vcInstallDir = None
     vcVersion = None
     if vsVersion == VSVersion.VS2005:
@@ -86,8 +86,61 @@ def copyVCToBin(vsVersion):
 
     vcInstallDir = getVCInstallDir(vsVersion)
     if vcInstallDir != None:
-        dirFrom = vcInstallDir + r'\..\..'
-        dirTo = sys.path[0]+r'\Bin\Compiler\v'+vcVersion
+        dirFrom = vcInstallDir + r'\..\Common7'
+        dirTo = sys.path[0]+r'\Bin\Compiler\v'+vcVersion+r'\Common7'
+        copyDir(dirFrom,dirTo)
+        dirFrom = vcInstallDir + r'\..\VC'
+        dirTo = sys.path[0]+r'\Bin\Compiler\v'+vcVersion+r'\VC'
+        copyDir(dirFrom,dirTo)
+
+def (vsVersion):
+    vcInstallDir = None
+    msdkVersion = None
+    if vsVersion == VSVersion.VS2005:
+        return msdkVersion   #No Need Copy
+    elif vsVersion == VSVersion.VS2008:
+        msdkVersion = r'7.0A'
+    elif vsVersion == VSVersion.VS2010:
+        msdkVersion = r'7.0A'
+    elif vsVersion == VSVersion.VS2012:
+        msdkVersion = r'8.0'
+    elif vsVersion == VSVersion.VS2013:
+        msdkVersion = r'8.1'
+    elif vsVersion == VSVersion.VS2015:
+        msdkVersion = r'8.1'
+    else :
+        return vsInstallDir
+
+    vcInstallDir = getHKLMValue(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows\v'%msdkVersion,'InstallationFolder')
+    if vcInstallDir != None:
+        return vcInstallDir
+    vcInstallDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v'%msdkVersion,'InstallationFolder')
+    if vcInstallDir != None:
+        return vcInstallDir
+    return vcInstallDir
+
+def copyMicrosoftSDKs(vsVersion):
+    msdkDir = None
+    msdkVersion = None
+    if vsVersion == VSVersion.VS2005:
+        return 
+    elif vsVersion == VSVersion.VS2008:
+        msdkVersion = r'7.0A'
+    elif vsVersion == VSVersion.VS2010:
+        msdkVersion = r'7.0A'
+    elif vsVersion == VSVersion.VS2012:
+        msdkVersion = r'8.0'
+    elif vsVersion == VSVersion.VS2013:
+        msdkVersion = r'8.1'
+    elif vsVersion == VSVersion.VS2015:
+        msdkVersion = r'8.1'
+    else :
+        return vsInstallDir
+
+    msdkDir = getMicrosoftSDKsDir(vsVersion)
+    if vcInstallDir != None:
+        dirFrom = msdkDir'
+        dirTo = sys.path[0]+r'\Bin\MicrosoftSDKs\Windows\v'+msdkVersion
         copyDir(dirFrom,dirTo)
 
 
@@ -116,19 +169,19 @@ if __name__ == '__main__' :
     #copy VC
     print('Copy Visual C++ comilers')
     if isInstallVS(VSVersion.VS2005) :
-        copyVCToBin(VSVersion.VS2005)
+        copyVC(VSVersion.VS2005)
     elif isInstallVS(VSVersion.VS2008) :
-        copyVCToBin(VSVersion.VS2008)
+        copyVC(VSVersion.VS2008)
     elif isInstallVS(VSVersion.VS2010) :
-        copyVCToBin(VSVersion.VS2010)
+        copyVC(VSVersion.VS2010)
     elif isInstallVS(VSVersion.VS2010) :
-        copyVCToBin(VSVersion.VS2010)
+        copyVC(VSVersion.VS2010)
     elif isInstallVS(VSVersion.VS2012) :
-        copyVCToBin(VSVersion.VS2012)
+        copyVC(VSVersion.VS2012)
     elif isInstallVS(VSVersion.VS2013) :
-        copyVCToBin(VSVersion.VS2013)
+        copyVC(VSVersion.VS2013)
     elif isInstallVS(VSVersion.VS2015) :
-        copyVCToBin(VSVersion.VS2015)
+        copyVC(VSVersion.VS2015)
 
     #copy MicrosoftSDKs
     print('Copy MicrosfotSDKs')
