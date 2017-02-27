@@ -4,6 +4,7 @@
 import winreg
 import enum
 import sys
+import os
 
 class VSVersion(enum.Enum):
     VS2005 = 1
@@ -13,12 +14,7 @@ class VSVersion(enum.Enum):
     VS2013 = 5
     VS2015 = 6
     
-
-class WindowsSdkVersion:
-
-
-
-key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r'SYSTEM\CurrentControlSet\Services\Tcpip\Performance')
+## key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r'SYSTEM\CurrentControlSet\Services\Tcpip\Performance')
 
 def getHKLMValue(path,name):
     value = None
@@ -44,7 +40,7 @@ def getVCInstallDir(vsVersion):
         vcVersion = r'12.0'
     elif vsVersion == VSVersion.VS2015:
         vcVersion = r'14.0'
-    else
+    else :
         return vsInstallDir
 
     vcInstallDir = getHKLMValue(r'SOFTWARE\Microsoft\VisualStudio\%s\Setup\VC'%vcVersion,'ProductDir')
@@ -62,16 +58,18 @@ def getVCInstallDir(vsVersion):
         return vcInstallDir
     return vcInstallDir
 
-def IsInstallVS(vsVersion):
-    if GetVCInstallDir(vsVersion) != None :
+def isInstallVS(vsVersion):
+    if getVCInstallDir(vsVersion) != None :
         return True
     return False
 
-def CopyDir(dirFrom,dirTo):
-    os.system(r'xcopy %s %s /I /E /Y'%(dirFrom,dirTo))
+def copyDir(dirFrom,dirTo):
+    cmd = r'xcopy "%s" "%s" /I /E /Y'%(dirFrom,dirTo)
+    #print(cmd)
+    os.system(cmd)
 
-def CopyVCToBin(vsVersion):
-        vcInstallDir = None
+def copyVCToBin(vsVersion):
+    vcInstallDir = None
     vcVersion = None
     if vsVersion == VSVersion.VS2005:
         vcVersion = r'80'
@@ -86,11 +84,11 @@ def CopyVCToBin(vsVersion):
     elif vsVersion == VSVersion.VS2015:
         vcVersion = r'140'
 
-    vcInstallDir = GetVCInstallDir(vsVersion)
+    vcInstallDir = getVCInstallDir(vsVersion)
     if vcInstallDir != None:
         dirFrom = vcInstallDir + r'\..\..'
-        dirTo = sys.[path0]+r'\Bin\Compiler\v'+vcVersion
-        CopyDir(dirFrom,dirTo)
+        dirTo = sys.path[0]+r'\Bin\Compiler\v'+vcVersion
+        copyDir(dirFrom,dirTo)
 
 
 ##def PrintReg() :
@@ -109,31 +107,34 @@ def CopyVCToBin(vsVersion):
 ##    temp = winreg.QueryValueEx(key,'Close')
 ##    print(temp)
 
-def IsInstallVS(vsVersion):
-    if GetVCInstallDir(vsVersion) != None :
+def isInstallVS(vsVersion):
+    if getVCInstallDir(vsVersion) != None :
         return True
     return False
 
 if __name__ == '__main__' :
     #copy VC
-    if IsInstallVS(VSVersion.VS2005)
-        CopyVCToBin(VSVersion.VS2005)
-    elif IsInstallVS(VSVersion.VS2008)
-        CopyVCToBin(VSVersion.VS2008)
-    elif IsInstallVS(VSVersion.VS2010)
-        CopyVCToBin(VSVersion.VS2010)
-    elif IsInstallVS(VSVersion.VS2010)
-        CopyVCToBin(VSVersion.VS2010)
-    elif IsInstallVS(VSVersion.VS2012)
-        CopyVCToBin(VSVersion.VS2012)
-    elif IsInstallVS(VSVersion.VS2013)
-        CopyVCToBin(VSVersion.VS2013)
-    elif IsInstallVS(VSVersion.VS2015)
-        CopyVCToBin(VSVersion.VS2015)
+    print('Copy Visual C++ comilers')
+    if isInstallVS(VSVersion.VS2005) :
+        copyVCToBin(VSVersion.VS2005)
+    elif isInstallVS(VSVersion.VS2008) :
+        copyVCToBin(VSVersion.VS2008)
+    elif isInstallVS(VSVersion.VS2010) :
+        copyVCToBin(VSVersion.VS2010)
+    elif isInstallVS(VSVersion.VS2010) :
+        copyVCToBin(VSVersion.VS2010)
+    elif isInstallVS(VSVersion.VS2012) :
+        copyVCToBin(VSVersion.VS2012)
+    elif isInstallVS(VSVersion.VS2013) :
+        copyVCToBin(VSVersion.VS2013)
+    elif isInstallVS(VSVersion.VS2015) :
+        copyVCToBin(VSVersion.VS2015)
 
     #copy MicrosoftSDKs
+    print('Copy MicrosfotSDKs')
 
     #copy MSBuild
+    print('Copy MSBuild')
 
     #copy WindowsKits
 
