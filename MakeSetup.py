@@ -93,8 +93,9 @@ def copyVC(vsVersion):
         dirTo = sys.path[0]+r'\Bin\Compiler\v'+vcVersion+r'\VC'
         copyDir(dirFrom,dirTo)
 
-def (vsVersion):
-    vcInstallDir = None
+def getMSdkDir(vsVersion):
+    msdkDir = None
+    msdkVersion = none
     msdkVersion = None
     if vsVersion == VSVersion.VS2005:
         return msdkVersion   #No Need Copy
@@ -111,13 +112,13 @@ def (vsVersion):
     else :
         return vsInstallDir
 
-    vcInstallDir = getHKLMValue(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows\v'%msdkVersion,'InstallationFolder')
-    if vcInstallDir != None:
-        return vcInstallDir
-    vcInstallDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v'%msdkVersion,'InstallationFolder')
-    if vcInstallDir != None:
-        return vcInstallDir
-    return vcInstallDir
+    msdkDir = getHKLMValue(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows\v'%msdkVersion,'InstallationFolder')
+    if msdkDir != None:
+        return msdkDir
+    msdkDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v'%msdkVersion,'InstallationFolder')
+    if msdkDir != None:
+        return msdkDir
+    return msdkDir
 
 def copyMicrosoftSDKs(vsVersion):
     msdkDir = None
@@ -138,10 +139,28 @@ def copyMicrosoftSDKs(vsVersion):
         return vsInstallDir
 
     msdkDir = getMicrosoftSDKsDir(vsVersion)
-    if vcInstallDir != None:
-        dirFrom = msdkDir'
+    if msdkDir != None:
+        dirFrom = msdkDir
         dirTo = sys.path[0]+r'\Bin\MicrosoftSDKs\Windows\v'+msdkVersion
         copyDir(dirFrom,dirTo)
+
+def copyMSBuild():
+    
+
+def getWindowsKitsDir():
+    windowsKitsDir = None;
+    windowsKitsDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots','KitsRoot10')
+    if windowsKitsDir != None:
+        return windowsKitsDir
+    windowsKitsDir = getHKLMValue(r'SOFTWARE\Microsoft\Windows Kits\Installed Roots','KitsRoot10')
+    if windowsKitsDir != None:
+        return windowsKitsDir
+    return None
+
+##versions=('')
+def copyWindowsKits(versions):
+    for version in versions:
+        path = getWindowsKitsDir()
 
 
 ##def PrintReg() :
@@ -186,10 +205,28 @@ if __name__ == '__main__' :
     #copy MicrosoftSDKs
     print('Copy MicrosfotSDKs')
 
+    if isInstallVS(VSVersion.VS2005) :
+        copyMicrosoftSDKs(VSVersion.VS2005)
+    elif isInstallVS(VSVersion.VS2008) :
+        copyMicrosoftSDKs(VSVersion.VS2008)
+    elif isInstallVS(VSVersion.VS2010) :
+        copyMicrosoftSDKs(VSVersion.VS2010)
+    elif isInstallVS(VSVersion.VS2010) :
+        copyMicrosoftSDKs(VSVersion.VS2010)
+    elif isInstallVS(VSVersion.VS2012) :
+        copyMicrosoftSDKs(VSVersion.VS2012)
+    elif isInstallVS(VSVersion.VS2013) :
+        copyMicrosoftSDKs(VSVersion.VS2013)
+    elif isInstallVS(VSVersion.VS2015) :
+        copyMicrosoftSDKs(VSVersion.VS2015)
+
     #copy MSBuild
     print('Copy MSBuild')
+    copyMSBuild
 
     #copy WindowsKits
+    print('Copy MSBuild')
+    copyWindowsKits()
 
     #download vcredist
 
