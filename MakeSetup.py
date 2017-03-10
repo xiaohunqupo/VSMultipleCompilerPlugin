@@ -17,49 +17,70 @@ class VSVersion(enum.Enum):
 ## key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,r'SYSTEM\CurrentControlSet\Services\Tcpip\Performance')
 
 def getHKLMValue(path,name):
-    value = None
     try:
         key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,path)
         value,type = winreg.QueryValueEx(key,name)
+        return value
     except WindowsError:
-        pass
-    return value
+        return None
+    return None
 
-def getVCInstallDir(vsVersion):
-    vcInstallDir = None
-    vcVersion = None
-    if vsVersion == VSVersion.VS2005:
-        vcVersion = r'8.0'
-    elif vsVersion == VSVersion.VS2008:
-        vcVersion = r'9.0'
-    elif vsVersion == VSVersion.VS2010:
-        vcVersion = r'10.0'
-    elif vsVersion == VSVersion.VS2012:
-        vcVersion = r'11.0'
-    elif vsVersion == VSVersion.VS2013:
-        vcVersion = r'12.0'
-    elif vsVersion == VSVersion.VS2015:
-        vcVersion = r'14.0'
-    else :
-        return vsInstallDir
+#vs2008.WindowsSdkDir->MSDK\v6.0A\
+#vs2008.FrameWorkSDKDir->MSDK\v6.0A
+#vs2010.WindowsSDK80Path->WindowsKits\8.0
+#vs2010.WindowsSdkDir->MSDK\v7.0A
+#vs2010.FrameworkSdkDir->MSDK\Windows\v7.0A
+#vs2012.windowsSdkDir->WindowsKits\8.0
+#vs2012.windowsSdkDir_80->WindowsKits\8.0
+#vs2012.windowsSdkDir_80a->MSDK\V8.0A
+#vs2012.FrameworkDir-WindowsKits\8.0
+#vs2013.windowssdkdir->WindowsKits\8.1
+#vs2013.windowssdkdir_80->WindowsKits\8.0
+#vs2013.windowssdkdir_81->WindowsKits\8.1
+#vs2013.windowssdkdir_81a->MSDK\8.1A
+#vs2013.frameworkSdkDir->WindowsKits\8.1
+#vs2013_xp.windowssdkdir_71A->MSDK\71A
+#vs2013_xp.frameworkSdkDir_71A->MSDK\71A
+#vs2015.windowssdkdir->WindowsKits\8.1
+#vs2015.windowssdkDir_10->windowsKits\10
 
-    vcInstallDir = getHKLMValue(r'SOFTWARE\Microsoft\VisualStudio\%s\Setup\VC'%vcVersion,'ProductDir')
-    if vcInstallDir != None:
-        return vcInstallDir
-    vcInstallDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\%s\Setup\VC'%vcVersion,'ProductDir')
-    if vcInstallDir != None:
-        return vcInstallDir
-    vcInstallDir = getHKLMValue(r'SOFTWARE\Microsoft\VCExpress\%s\Setup\VC'%vcVersion,'ProductDir')
-    if vcInstallDir != None:
-        return vcInstallDir
 
-    vcInstallDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\VCExpress\%s\Setup\VC'%vcVersion,'ProductDir')
-    if vcInstallDir != None:
-        return vcInstallDir
-    return vcInstallDir
+#8.0 for vs2012
+#KitsRoot->8.0
+#KitsRoot10->10
+#kitsRoot81->8.1
+#%programfiles%
+#%programfiles(x86)%
 
-def isInstallVS(vsVersion):
-    if getVCInstallDir(vsVersion) != None :
+
+#        (VSVer,VCVer,VCDirName,MSDKVer, WKVer, WKRegName)
+VerList = (
+         ('2005', '8.0',  'v80',  '',      '',    '',),
+         ('2008', '9.0',  'v90',  'v7.0A', '',    '',),
+         ('2010', '10.0', 'v100', 'v7.0A', '',    '',),
+         ('2012', '11.0', 'v110', 'v8.0', '8.0',  'KitsRoot',),
+         ('2013', '12.0', 'v120', 'v8.1', '8.1',  'KitsRoot81',),
+         ('2015', '14.0', 'v140', 'v8.1', '10',   'KitsRoot82',)
+         )
+
+
+def getVCInstallDir(ver):
+    dir = getHKLMValue(r'SOFTWARE\Microsoft\VisualStudio\%s\Setup\VC'%ver,'ProductDir')
+    if dir :
+        return dir
+    dir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\VisualStudio\%s\Setup\VC'%ver,'ProductDir')
+    if dir :
+        return dir
+    dir = getHKLMValue(r'SOFTWARE\Microsoft\VCExpress\%s\Setup\VC'%ver,'ProductDir')
+    if dir :
+        return dir
+    dir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\VCExpress\%s\Setup\VC'%ver,'ProductDir')
+    if dir :
+        return dir
+    return None
+
+def isInstallVS(ver):
+    if getVCInstallDir(vsVersion) :
         return True
     return False
 
@@ -68,116 +89,50 @@ def copyDir(dirFrom,dirTo):
     #print(cmd)
     os.system(cmd)
 
-def copyVC(vsVersion):
-    vcInstallDir = None
-    vcVersion = None
-    if vsVersion == VSVersion.VS2005:
-        vcVersion = r'80'
-    elif vsVersion == VSVersion.VS2008:
-        vcVersion = r'90'
-    elif vsVersion == VSVersion.VS2010:
-        vcVersion = r'100'
-    elif vsVersion == VSVersion.VS2012:
-        vcVersion = r'110'
-    elif vsVersion == VSVersion.VS2013:
-        vcVersion = r'110'
-    elif vsVersion == VSVersion.VS2015:
-        vcVersion = r'140'
-
-    vcInstallDir = getVCInstallDir(vsVersion)
-    if vcInstallDir != None:
-        dirFrom = vcInstallDir + r'\..\Common7'
-        dirTo = sys.path[0]+r'\Bin\Compiler\v'+vcVersion+r'\Common7'
+def copyVC(vcVer,VCDirName):
+    vcDir = getVCInstallDir(ver)
+    if dir :
+        dirFrom = r'{VCPath}\..\Common7'.format(VCPath=vcDir)
+        dirTo = r'{currentPath}\Bin\Compiler\{ver}\Common7'.format(currentPath=sys.path[0],ver=VCDirName)
         copyDir(dirFrom,dirTo)
-        dirFrom = vcInstallDir + r'\..\VC'
-        dirTo = sys.path[0]+r'\Bin\Compiler\v'+vcVersion+r'\VC'
+        dirFrom = r'{VCPath}\..\VC'.format(VCPath=vcInstallDir)
+        dirTo = r'{currentPath}\Bin\Compiler\{ver}\VC'.format(currentPath=sys.path[0],ver=VCDirName)
         copyDir(dirFrom,dirTo)
 
-def getMSdkDir(vsVersion):
-    msdkDir = None
-    msdkVersion = none
-    msdkVersion = None
-    if vsVersion == VSVersion.VS2005:
-        return msdkVersion   #No Need Copy
-    elif vsVersion == VSVersion.VS2008:
-        msdkVersion = r'7.0A'
-    elif vsVersion == VSVersion.VS2010:
-        msdkVersion = r'7.0A'
-    elif vsVersion == VSVersion.VS2012:
-        msdkVersion = r'8.0'
-    elif vsVersion == VSVersion.VS2013:
-        msdkVersion = r'8.1'
-    elif vsVersion == VSVersion.VS2015:
-        msdkVersion = r'8.1'
-    else :
-        return vsInstallDir
 
-    msdkDir = getHKLMValue(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows\v'%msdkVersion,'InstallationFolder')
-    if msdkDir != None:
-        return msdkDir
-    msdkDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\v'%msdkVersion,'InstallationFolder')
-    if msdkDir != None:
-        return msdkDir
-    return msdkDir
+def getMSdkDir(ver):
+    msdir = getHKLMValue(r'SOFTWARE\Microsoft\Microsoft SDKs\Windows\{ver}'.format(ver=ver),'InstallationFolder')
+    if msdir :
+        return msdir
+    msdir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Microsoft SDKs\Windows\{ver}'.format(ver=ver),'InstallationFolder')
+    if msdir :
+        return msdir
+    return None
 
-def copyMicrosoftSDKs(vsVersion):
-    msdkDir = None
-    msdkVersion = None
-    if vsVersion == VSVersion.VS2005:
-        return 
-    elif vsVersion == VSVersion.VS2008:
-        msdkVersion = r'7.0A'
-    elif vsVersion == VSVersion.VS2010:
-        msdkVersion = r'7.0A'
-    elif vsVersion == VSVersion.VS2012:
-        msdkVersion = r'8.0'
-    elif vsVersion == VSVersion.VS2013:
-        msdkVersion = r'8.1'
-    elif vsVersion == VSVersion.VS2015:
-        msdkVersion = r'8.1'
-    else :
-        return vsInstallDir
-
-    msdkDir = getMicrosoftSDKsDir(vsVersion)
-    if msdkDir != None:
-        dirFrom = msdkDir
-        dirTo = sys.path[0]+r'\Bin\MicrosoftSDKs\Windows\v'+msdkVersion
+def copyMicrosoftSDKs(ver):
+    dirFrom = getMSdkDir(ver)
+    if dirFrom :
+        dirTo = +r'{currentPath}\Bin\MicrosoftSDKs\Windows\{ver}'.format(currentPath=sys.path[0],ver=ver)
         copyDir(dirFrom,dirTo)
 
 def copyMSBuild():
-    
+    pass
 
-def getWindowsKitsDir():
-    windowsKitsDir = None;
-    windowsKitsDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots','KitsRoot10')
-    if windowsKitsDir != None:
-        return windowsKitsDir
-    windowsKitsDir = getHKLMValue(r'SOFTWARE\Microsoft\Windows Kits\Installed Roots','KitsRoot10')
-    if windowsKitsDir != None:
-        return windowsKitsDir
+def getWindowsKitsDir(name):
+    wkDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots',name)
+    if wkDir:
+        return wkDir
+    wkDir = getHKLMValue(r'SOFTWARE\Microsoft\Windows Kits\Installed Roots',name)
+    if wkDir:
+        return wkDir
     return None
 
-##versions=('')
-def copyWindowsKits(versions):
-    for version in versions:
-        path = getWindowsKitsDir()
+def copyWindowsKits(ver,name):
+    dirFrom = getWindowsKitsDir(name)
+    if dirFrom :
+        dirTo = r'{curpath}\Bin\MicrosoftKits\Windows\{ver}'.format(curpath=sys.path[0],ver=name)
+        copyDir(dirFrom,dirTo)
 
-
-##def PrintReg() :
-##    try:
-##        i = 0
-##        while 1:
-##            name,value,type = winreg.EnumValue(key,i)
-##            print(repr(name),value,type)
-##            i+=1
-##    except WindowsError:
-##        pass
-##
-##    value,type = winreg.QueryValueEx(key,'Close')
-##    print(value,type)
-##
-##    temp = winreg.QueryValueEx(key,'Close')
-##    print(temp)
 
 def isInstallVS(vsVersion):
     if getVCInstallDir(vsVersion) != None :
@@ -185,41 +140,16 @@ def isInstallVS(vsVersion):
     return False
 
 if __name__ == '__main__' :
-    #copy VC
-    print('Copy Visual C++ comilers')
-    if isInstallVS(VSVersion.VS2005) :
-        copyVC(VSVersion.VS2005)
-    elif isInstallVS(VSVersion.VS2008) :
-        copyVC(VSVersion.VS2008)
-    elif isInstallVS(VSVersion.VS2010) :
-        copyVC(VSVersion.VS2010)
-    elif isInstallVS(VSVersion.VS2010) :
-        copyVC(VSVersion.VS2010)
-    elif isInstallVS(VSVersion.VS2012) :
-        copyVC(VSVersion.VS2012)
-    elif isInstallVS(VSVersion.VS2013) :
-        copyVC(VSVersion.VS2013)
-    elif isInstallVS(VSVersion.VS2015) :
-        copyVC(VSVersion.VS2015)
-
-    #copy MicrosoftSDKs
-    print('Copy MicrosfotSDKs')
-
-    if isInstallVS(VSVersion.VS2005) :
-        copyMicrosoftSDKs(VSVersion.VS2005)
-    elif isInstallVS(VSVersion.VS2008) :
-        copyMicrosoftSDKs(VSVersion.VS2008)
-    elif isInstallVS(VSVersion.VS2010) :
-        copyMicrosoftSDKs(VSVersion.VS2010)
-    elif isInstallVS(VSVersion.VS2010) :
-        copyMicrosoftSDKs(VSVersion.VS2010)
-    elif isInstallVS(VSVersion.VS2012) :
-        copyMicrosoftSDKs(VSVersion.VS2012)
-    elif isInstallVS(VSVersion.VS2013) :
-        copyMicrosoftSDKs(VSVersion.VS2013)
-    elif isInstallVS(VSVersion.VS2015) :
-        copyMicrosoftSDKs(VSVersion.VS2015)
-
+    for VSVer,VCVer,VCDirName,MSDKVer,WKVer,WKRegName,WKDir in VerList:
+        if !isInstallVS(VSVer):
+            continue
+        if VCVer && VCDirName:
+            copyVC(VCVer,VCDirName)
+        if MSDKVer:
+            copyMicrosoftSDKs(MSDKVer)
+        if WKVer && WKRegName:
+            copyWindowsKits(WKVer,WKRegName)
+        
     #copy MSBuild
     print('Copy MSBuild')
     copyMSBuild
