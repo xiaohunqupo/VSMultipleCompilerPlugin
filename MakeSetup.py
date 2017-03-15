@@ -5,6 +5,14 @@ import winreg
 import enum
 import sys
 import os
+import platform
+
+def GetPFX86Dir():
+    if '64' in platform.machine():
+        return r'%programfiles(x86)%'
+    else:
+        return r'%programfiles%'
+    
 
 class VSVersion(enum.Enum):
     VS2005 = 1
@@ -49,18 +57,18 @@ def getHKLMValue(path,name):
 #KitsRoot->8.0
 #KitsRoot10->10
 #kitsRoot81->8.1
-#%programfiles%
-#%programfiles(x86)%
+#%programfiles% win64下有效，win32下有效
+#%programfiles(x86)% win64下有效，win32下无效
 
 
 #        (VSVer,VCVer,VCDirName,MSDKVer, WKVer, WKRegName)
 VerList = (
-         ('2005', '8.0',  'v80',  '',      '',    '',),
-         ('2008', '9.0',  'v90',  'v7.0A', '',    '',),
-         ('2010', '10.0', 'v100', 'v7.0A', '',    '',),
-         ('2012', '11.0', 'v110', 'v8.0', '8.0',  'KitsRoot',),
-         ('2013', '12.0', 'v120', 'v8.1', '8.1',  'KitsRoot81',),
-         ('2015', '14.0', 'v140', 'v8.1', '10',   'KitsRoot82',)
+         ('2005', '8.0',  'V80',  '',      '',    '',),
+         ('2008', '9.0',  'V90',  'v7.0A', '',    '',),
+         ('2010', '10.0', 'V100', 'v7.0A', '',    '',),
+         ('2012', '11.0', 'V110', 'v8.0', '8.0',  'KitsRoot',),
+         ('2013', '12.0', 'V120', 'v8.1', '8.1',  'KitsRoot81',),
+         ('2015', '14.0', 'V140', 'v8.1', '10',   'KitsRoot82',)
          )
 
 
@@ -80,12 +88,16 @@ def getVCInstallDir(ver):
     return None
 
 def isInstallVS(ver):
-    if getVCInstallDir(vsVersion) :
+    if getVCInstallDir(vsVersion):
         return True
     return False
 
+def copyFile(nameFrom,dirTo):
+    cmd = r'xcopy "{namefrom}" "{dirto}" /Y'.format(namefrom=nameFrom,dirto=dirTo)
+    os.system(cmd)
+
 def copyDir(dirFrom,dirTo):
-    cmd = r'xcopy "%s" "%s" /I /E /Y'%(dirFrom,dirTo)
+    cmd = r'xcopy "{dirFrom}" "{dirTo}" /I /E /Y'.format(diurFrom=dirFrom,dirTo=dirTo)
     #print(cmd)
     os.system(cmd)
 
@@ -115,8 +127,31 @@ def copyMicrosoftSDKs(ver):
         dirTo = +r'{currentPath}\Bin\MicrosoftSDKs\Windows\{ver}'.format(currentPath=sys.path[0],ver=ver)
         copyDir(dirFrom,dirTo)
 
-def copyMSBuild():
-    pass
+def copyMSBuildV110Down(VSVer,VCDirName):
+    nameFrom = r'{pf}\MSBuild\Microsoft.Cpp\v4.0\*.*'.format(pf=GetPFX86Dir())
+    dirTo = r'{currentPath}\MSBuild\{ver}'.format(currentPath=sys.path[0],ver=VCDirName)
+    copyFile(nameFrom,dirTo)
+    
+    dirFrom = r'{pf}\MSBuild\Microsoft.Cpp\v4.0\1033'.format(pf=GetPFX86Dir())
+    dirTo = r'{currentPath}\MSBuild\{ver}\1033'.format(currentPath=sys.path[0],ver=VCDirName)
+    copyFile(nameFrom,dirTo)
+
+    dirFrom = r'{pf}\MSBuild\Microsoft.Cpp\v4.0\2052'.format(pf=GetPFX86Dir())
+    dirTo = r'{currentPath}\MSBuild\{ver}\2052'.format(currentPath=sys.path[0],ver=VCDirName)
+    copyFile(nameFrom,dirTo)
+    
+    dirFrom = r'{pf}\MSBuild\Microsoft.Cpp\v4.0\BuildCustomizations'.format(pf=GetPFX86Dir())
+    dirTo = r'{currentPath}\MSBuild\{ver}\BuildCustomizations'.format(currentPath=sys.path[0],ver=VCDirName)
+    copyFile(nameFrom,dirTo)
+
+    dirFrom = r'{pf}\MSBuild\Microsoft.Cpp\v4.0\Platforms'.format(pf=GetPFX86Dir())
+    dirTo = r'{currentPath}\MSBuild\{ver}\Platforms'.format(currentPath=sys.path[0],ver=VCDirName)
+    copyFile(nameFrom,dirTo)
+
+def copyMSBuildV110AndUp(VCDirName):
+    dirFrom = r'{pf}\MSBuild\Microsoft.Cpp\v4.0\{ver}'.format(pf=GetPFX86Dir(),ver=VCDirName)
+    dirTo = r'{currentPath}\MSBuild\{ver}'.format(currentPath=sys.path[0],ver=VCDirName)
+    copyDir(dirFrom,dirTo)
 
 def getWindowsKitsDir(name):
     wkDir = getHKLMValue(r'SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots',name)
@@ -141,13 +176,13 @@ def isInstallVS(vsVersion):
 
 if __name__ == '__main__' :
     for VSVer,VCVer,VCDirName,MSDKVer,WKVer,WKRegName,WKDir in VerList:
-        if !isInstallVS(VSVer):
+        if not isInstallVS(VSVer):
             continue
-        if VCVer && VCDirName:
+        if VCVer and VCDirName:
             copyVC(VCVer,VCDirName)
         if MSDKVer:
             copyMicrosoftSDKs(MSDKVer)
-        if WKVer && WKRegName:
+        if WKVer and WKRegName:
             copyWindowsKits(WKVer,WKRegName)
         
     #copy MSBuild
