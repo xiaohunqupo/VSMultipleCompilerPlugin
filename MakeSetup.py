@@ -202,14 +202,12 @@ def copyWindowsKits(WKVer,WKRegName):
         copyDir(dirFrom,dirTo)
 
 def getInnoSetupDir():
-    ISDir = getHKLMValue(r'SOFTWARE\Classes\InnoSetupScriptFile\shell\Compile\command',r'(默认)')
+    ISDir = getHKLMValue(r'SOFTWARE\Classes\InnoSetupScriptFile\shell\Compile\command',r'')
+    #Always ISDir = '"C:\Program Files (x86)\Inno Setup 5\Compil32.exe" /cc "%1"'
     if ISDir :
-        ISDir = ISDir.split(' ')[0];
-        ISDir.strip(r'"')
+        ISDir = ISDir.lstrip('"')
+        ISDir = ISDir[:ISDir.find('"')]
     return ISDir
-#HKEY_LOCAL_MACHINE\SOFTWARE\Classes\InnoSetupScriptFile\shell\Compile\command
-#"C:\Program Files (x86)\Inno Setup 5\Compil32.exe" /cc "%1"
-        
 
 def callInnoSetup():
     ISDir = getInnoSetupDir()
