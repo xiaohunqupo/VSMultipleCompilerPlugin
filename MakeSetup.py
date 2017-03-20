@@ -201,6 +201,22 @@ def copyWindowsKits(WKVer,WKRegName):
         dirTo = r'{CP}\Bin\MicrosoftKits\Windows\{WKV}'.format(CP=sys.path[0],WKV=WKVer)
         copyDir(dirFrom,dirTo)
 
+def getInnoSetupDir():
+    ISDir = getHKLMValue(r'SOFTWARE\Classes\InnoSetupScriptFile\shell\Compile\command',r'(默认)')
+    if ISDir :
+        ISDir = ISDir.split(' ')[0];
+        ISDir.strip(r'"')
+    return ISDir
+#HKEY_LOCAL_MACHINE\SOFTWARE\Classes\InnoSetupScriptFile\shell\Compile\command
+#"C:\Program Files (x86)\Inno Setup 5\Compil32.exe" /cc "%1"
+        
+
+def callInnoSetup():
+    ISDir = getInnoSetupDir()
+    if ISDir:
+        cmd = r'"{ISD}" /cc "{CF}\{ISS}"'.format(ISD=ISDir,CF=sys.path[0],ISS=r'VSMCPSetup.iss')
+        os.system(cmd)
+
 if __name__ == '__main__' :
     for VSVer,VCVer,VCDirName,MSDKVer,WKVer,WKRegName in VerList:
         if not VSVer or not VCVer:
@@ -220,7 +236,7 @@ if __name__ == '__main__' :
         print('Copy MSBuild')
         copyMSBuild(VCDirName)
 
-    #download vcredist
+    callInnoSetup()
 
     
 
