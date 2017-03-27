@@ -216,6 +216,7 @@ def callInnoSetup():
         os.system(cmd)
 
 if __name__ == '__main__' :
+    '''
     for VSVer,VCVer,VCDirName,MSDKVer,WKVer,WKRegName in VerList:
         if not VSVer or not VCVer:
             continue
@@ -233,7 +234,7 @@ if __name__ == '__main__' :
         #copy MSBuild
         print('Copy MSBuild')
         copyMSBuild(VCDirName)
-
+'''
     callInnoSetup()
 
     
